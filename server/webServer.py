@@ -211,20 +211,20 @@ def robotCtrl(command_input, response):
 
 
     elif 'lookleft' == command_input:
-        P_sc.singleServo(0, -1, 3)
+        P_sc.singleServo(0, 1, 3)
 
     elif 'lookright' == command_input:
-        P_sc.singleServo(0, 1, 3)
+        P_sc.singleServo(0, -1, 3)
 
     elif 'LRstop' in command_input:
         P_sc.stopWiggle()
 
 
     elif 'up' == command_input:
-        T_sc.singleServo(1, -1, 3)
+        T_sc.singleServo(1, 1, 3)
 
     elif 'down' == command_input:
-        T_sc.singleServo(1, 1, 3)
+        T_sc.singleServo(1, -1, 3)
 
     elif 'UDstop' in command_input:
         T_sc.stopWiggle()
