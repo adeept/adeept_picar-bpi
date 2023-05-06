@@ -1,15 +1,9 @@
 #!/usr/bin/env python3
 # File name   : move.py
 # Description : Control Motor
-# Product     : GWR
-# Website     : www.gewbot.com
-# Author      : William
-# Date        : 2019/07/24
+
 import time
 import RPi.GPIO as GPIO
-
-# motor_EN_A: Pin7  |  motor_EN_B: Pin11
-# motor_A:  Pin8,Pin10    |  motor_B: Pin13,Pin12
 
 Motor_A_EN    = 4
 Motor_B_EN    = 17

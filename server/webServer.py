@@ -1,9 +1,5 @@
 #!/usr/bin/env/python
-# File name   : server.py
-# Production  : GWR
-# Website     : www.adeept.com
-# Author      : William
-# Date        : 2020/03/17
+# File name   : webServer.py
 
 import time
 import threading

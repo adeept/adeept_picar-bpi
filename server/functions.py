@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
-# File name   : servo.py
+# File name   : functions.py
 # Description : Control Functions
-# Author	  : William
-# Date		: 2020/03/17
+
 import time
 import RPi.GPIO as GPIO
 import threading

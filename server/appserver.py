@@ -1,10 +1,4 @@
 #!/usr/bin/env/python
-# File name   : server.py
-# Production  : Gtank
-# Website     : www.gewbot.com
-# E-mail      : gewubot@163.com
-# Author      : William
-# Date        : 2019/10/28
 
 import socket
 import threading

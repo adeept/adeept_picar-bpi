@@ -1,9 +1,7 @@
 #!/usr/bin/python3
-# File name   : Ultrasonic.py
-# Description : Detection distance and tracking with ultrasonic
-# Website     : www.gewbot.com
-# Author      : William
-# Date        : 2019/08/28
+# File name   : info.py
+# Description : Display device information
+
 import psutil
 
 def get_cpu_tempfunc():

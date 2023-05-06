@@ -1,9 +1,7 @@
 #!/usr/bin/python3
 # File name   : Ultrasonic.py
 # Description : Detection distance and tracking with ultrasonic
-# Website     : www.gewbot.com
-# Author      : William
-# Date        : 2019/02/23
+
 import RPi.GPIO as GPIO
 import time
 
