@@ -277,45 +277,6 @@ class Functions(threading.Thread):
             move.move(80, 'no', 'no', 0.5)            
 
 
-        # pwm.set_pwm(2, 0, pwm2_init)
-        # if self.scanPos == 1:
-        # 	pwm.set_pwm(self.scanServo, 0, pwm1_init-self.scanRange)
-        # 	time.sleep(0.3)
-        # 	self.scanList[0] = ultra.checkdist()
-        # elif self.scanPos == 2:
-        # 	pwm.set_pwm(self.scanServo, 0, pwm1_init)
-        # 	time.sleep(0.3)
-        # 	self.scanList[1] = ultra.checkdist()
-        # elif self.scanPos == 3:
-        # 	pwm.set_pwm(self.scanServo, 0, pwm1_init+self.scanRange)
-        # 	time.sleep(0.3)
-        # 	self.scanList[2] = ultra.checkdist()
-
-        # self.scanPos = self.scanPos + self.scanDir
-
-        # if self.scanPos > self.scanNum or self.scanPos < 1:
-        # 	if self.scanDir == 1:self.scanDir = -1
-        # 	elif self.scanDir == -1:self.scanDir = 1
-        # 	self.scanPos = self.scanPos + self.scanDir*2
-        # print(self.scanList)
-
-        # if min(self.scanList) < self.rangeKeep:
-        # 	if self.scanList.index(min(self.scanList)) == 0:
-        # 		pwm.set_pwm(self.turnServo, 0, pwm0_init+int(self.turnWiggle/3.5))
-        # 	elif self.scanList.index(min(self.scanList)) == 1:
-        # 		if self.scanList[0] < self.scanList[2]:
-        # 			pwm.set_pwm(self.turnServo, 0, pwm0_init+self.turnWiggle)
-        # 		else:
-        # 			pwm.set_pwm(self.turnServo, 0, pwm0_init-self.turnWiggle)
-        # 	elif self.scanList.index(min(self.scanList)) == 2:
-        # 		pwm.set_pwm(self.turnServo, 0, pwm0_init-int(self.turnWiggle/3.5))
-        # 	if max(self.scanList) < self.rangeKeep or min(self.scanList) < self.rangeKeep/3:
-        # 		move.move(80, 'backward', 'no', 0.5)
-        # else:
-        # 	#move along
-        # 	move.move(80, 'forward', 'no', 0.5)
-        # 	pass
-
 
     def steadyProcessing(self):
         print('steadyProcessing')
