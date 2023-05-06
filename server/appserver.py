@@ -6,10 +6,7 @@ import time
 import os
 import move
 import servo
-import switch
 servo.servo_init()
-switch.switchSetup()
-switch.set_all_switch_off()
 
 step_set = 1
 speed_set = 100
@@ -158,14 +155,10 @@ def app_ctrl():
             servo_move.resume()
 
         elif data_input == 'cStart\n':
-            switch.switch(1,1)
-            switch.switch(2,1)
-            switch.switch(3,1)
+            pass
 
         elif data_input == 'dStart\n':
-            switch.switch(1,0)
-            switch.switch(2,0)
-            switch.switch(3,0)
+            pass
 
         elif 'aStop' in data_input:
             servo_move.pause()
