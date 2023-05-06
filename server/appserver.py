@@ -115,21 +115,21 @@ def app_ctrl():
             turn_command = 'no'
             move.move(speed_set, direction_command, turn_command, rad)
 
-
+            
         if data_input == 'lookLeftStart\n':
-            servo_command = 'lookleft'
-            servo_move.resume()
-
-        elif data_input == 'lookRightStart\n': 
-            servo_command = 'lookright'
-            servo_move.resume()
-
-        elif data_input == 'downStart\n':
             servo_command = 'down'
             servo_move.resume()
 
-        elif data_input == 'upStart\n':
+        elif data_input == 'lookRightStart\n': 
             servo_command = 'up'
+            servo_move.resume()
+
+        elif data_input == 'downStart\n':
+            servo_command = 'lookleft'
+            servo_move.resume()
+
+        elif data_input == 'upStart\n':
+            servo_command = 'lookright'
             servo_move.resume()
 
         elif 'lookLeftStop' in data_input:
