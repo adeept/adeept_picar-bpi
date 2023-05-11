@@ -21,17 +21,6 @@ import websockets
 import json
 import app
 
-# OLED_connection = 1
-# try:
-#     import OLED
-#     screen = OLED.OLED_ctrl()
-#     screen.start()
-#     screen.screen_show(1, 'ADEEPT.COM')
-# except:
-#     OLED_connection = 0
-#     print('OLED disconnected')
-#     pass
-
 functionMode = 0
 speed_set = 100
 rad = 0.1
@@ -111,7 +100,7 @@ def functionSelect(command_input, response):
         #     screen.screen_show(5,'SCANNING')
         if modeSelect == 'PT':
             radar_send = fuc.radarScan()
-            print(radar_send)
+            # print(radar_send)
             response['title'] = 'scanResult'
             response['data'] = radar_send
             time.sleep(0.3)

@@ -102,6 +102,7 @@ class Functions(threading.Thread):
 
     def radarScan(self):
         global pwm0_pos
+        print("Radar Scan...")
         scan_speed = 3
         result = []
 
@@ -114,10 +115,12 @@ class Functions(threading.Thread):
                 pwm0_pos-=scan_speed
                 pwm.set_pwm(0, 0, pwm0_pos)
                 dist = ultra.checkdist()
-                if dist > 20:
+                # print("dist: %0.2f" %dist)
+                if dist > 20 or dist <=0:
                     continue
                 theta = 180 - (pwm0_pos-100)/2.55 # +30 deviation
                 result.append([dist, theta])
+                time.sleep(0.04)
         else:
             pwm0_pos = pwm0_min
             pwm.set_pwm(0, 0, pwm0_pos)
@@ -127,11 +130,12 @@ class Functions(threading.Thread):
                 pwm0_pos+=scan_speed
                 pwm.set_pwm(0, 0, pwm0_pos)
                 dist = ultra.checkdist()
-                if dist > 20:
+                if dist > 20 or dist <=0:
                     continue
                 theta = (pwm0_pos-100)/2.55
                 result.append([dist, theta])
         pwm.set_pwm(0, 0, pwm0_init)
+        print("Scan end!")
         return result
 
 
