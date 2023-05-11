@@ -107,12 +107,12 @@ class Functions(threading.Thread):
 
         if pwm0_direction:
             pwm0_pos = pwm0_max
-            pwm.set_pwm(1, 0, pwm0_pos)
+            pwm.set_pwm(0, 0, pwm0_pos)
             time.sleep(0.8)
 
             while pwm0_pos>pwm0_min:
                 pwm0_pos-=scan_speed
-                pwm.set_pwm(1, 0, pwm0_pos)
+                pwm.set_pwm(0, 0, pwm0_pos)
                 dist = ultra.checkdist()
                 if dist > 20:
                     continue
@@ -120,18 +120,18 @@ class Functions(threading.Thread):
                 result.append([dist, theta])
         else:
             pwm0_pos = pwm0_min
-            pwm.set_pwm(1, 0, pwm0_pos)
+            pwm.set_pwm(0, 0, pwm0_pos)
             time.sleep(0.8)
 
             while pwm0_pos<pwm0_max:
                 pwm0_pos+=scan_speed
-                pwm.set_pwm(1, 0, pwm0_pos)
+                pwm.set_pwm(0, 0, pwm0_pos)
                 dist = ultra.checkdist()
                 if dist > 20:
                     continue
                 theta = (pwm0_pos-100)/2.55
                 result.append([dist, theta])
-        pwm.set_pwm(1, 0, pwm0_init)
+        pwm.set_pwm(0, 0, pwm0_init)
         return result
 
 
