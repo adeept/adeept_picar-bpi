@@ -21,6 +21,17 @@ import websockets
 import json
 import app
 
+# OLED_connection = 1
+# try:
+#     import OLED
+#     screen = OLED.OLED_ctrl()
+#     screen.start()
+#     screen.screen_show(1, 'ADEEPT.COM')
+# except:
+#     OLED_connection = 0
+#     print('OLED disconnected')
+#     pass
+
 functionMode = 0
 speed_set = 100
 rad = 0.1
@@ -90,7 +101,7 @@ def FPV_thread():
 
 
 def ap_thread():
-    os.system("sudo create_ap --no-virt wlan0 eth0 Adeept 12345678")
+    os.system("sudo create_ap --no-virt wlan0 eth0 Adeept_robot 12345678")
 
 
 def functionSelect(command_input, response):
@@ -100,7 +111,6 @@ def functionSelect(command_input, response):
         #     screen.screen_show(5,'SCANNING')
         if modeSelect == 'PT':
             radar_send = fuc.radarScan()
-            # print(radar_send)
             response['title'] = 'scanResult'
             response['data'] = radar_send
             time.sleep(0.3)
@@ -113,7 +123,7 @@ def functionSelect(command_input, response):
         flask_app.modeselect('watchDog')
 
     elif 'stopCV' == command_input:
-        flask_app.modeselect('none')
+        flask_app.modeselect('stop')
         switch.switch(1,0)
         switch.switch(2,0)
         switch.switch(3,0)
@@ -484,6 +494,7 @@ if __name__ == '__main__':
     try:
         asyncio.get_event_loop().run_forever()
     except Exception as e:
+        move.destroy()
+        print("_____________________")
         print(e)
         # RL.setColor(0,0,0)
-        move.destroy()

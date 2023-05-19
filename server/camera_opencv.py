@@ -11,9 +11,7 @@ import PID
 import time
 import threading
 import imutils
-# import robotLight
 
-# led = robotLight.RobotLight()
 pid = PID.PID()
 pid.SetKp(0.5)
 pid.SetKd(0)
@@ -25,8 +23,13 @@ linePos_2 = 380
 lineColorSet = 255
 frameRender = 1
 findLineError = 20
+findLineMove = 1
 
 ImgIsNone = 0
+
+# When turning, only one wheel pushes the car, so a value higher than forward_speed is required.
+turn_speed = 35 # Range of values: 0-100
+forward_speed = 20 # Avoid too fast, the video screen does not respond in time. Range of values: 0-100.
 
 colorUpper = np.array([44, 255, 255])
 colorLower = np.array([24, 100, 100])
@@ -114,10 +117,17 @@ class CVThread(threading.Thread):
                 cv2.rectangle(imgInput,(int(self.box_x-self.radius),int(self.box_y+self.radius)),(int(self.box_x+self.radius),int(self.box_y-self.radius)),(255,255,255),1)
 
         elif self.CVMode == 'findlineCV':
+            
+            CVThread.scGear.moveAngle(1, -45) # The camera looks down.
             if frameRender:
                 imgInput = cv2.cvtColor(imgInput, cv2.COLOR_BGR2GRAY)
-                retval_bw, imgInput =  cv2.threshold(imgInput, 0, 255, cv2.THRESH_OTSU)
-                imgInput = cv2.erode(imgInput, None, iterations=6)
+                '''
+                Image binarization, the method of processing functions can be searched for "threshold" in the link: http://docs.opencv.org/3.0.0/examples.html
+                '''
+                # retval_bw, imgInput =  cv2.threshold(imgInput, 0, 255, cv2.THRESH_OTSU) # THRESH_OTSU:Adaptive Threshold (Dynamic Threshold).flag, use Otsu algorithm to choose the threshold value.
+                retval_bw, imgInput =  cv2.threshold(imgInput, 80, 255, cv2.THRESH_BINARY) # Set the threshold manually and set it to 80.
+                imgInput = cv2.dilate(imgInput, None, iterations=2) # dilate
+                imgInput = cv2.erode(imgInput, None, iterations=2) #  erode
             try:
                 if lineColorSet == 255:
                     cv2.putText(imgInput,('Following White Line'),(30,50), cv2.FONT_HERSHEY_SIMPLEX, 0.5,(128,255,128),1,cv2.LINE_AA)
@@ -178,59 +188,42 @@ class CVThread(threading.Thread):
             self.drawing = 1
             
             self.motionCounter += 1
-            #print(motionCounter)
-            #print(text)
             self.lastMovtionCaptured = timestamp
-            # led.setColor(255,78,0)
-            # switch.switch(1,1)
-            # switch.switch(2,1)
-            # switch.switch(3,1)
 
         if (timestamp - self.lastMovtionCaptured).seconds >= 0.5:
-            # led.setColor(0,78,255)
             self.drawing = 0
-            # switch.switch(1,0)
-            # switch.switch(2,0)
-            # switch.switch(3,0)
         self.pause()
 
 
-    def findLineCtrl(self, posInput, setCenter):#2
-        # if posInput:
-        if posInput > (setCenter + findLineError):
-            # move.motorStop()
-            #turnRight
-            error = (posInput-320)/3
-            outv = int(round((pid.GenOut(error)),0))
-            CVThread.scGear.moveAngle(0,-outv)
-            if CVRun:
-                move.move(80, 'no', 'right', 0.5)
+    def findLineCtrl(self, posInput):
+        global findLineMove
+        # posInput == center
+        if posInput != None and findLineMove == 1:
+            if posInput > 480: # The position of the center of the black line in the screen (value range: 0-640)
+                #turnRight
+                if CVRun:
+                    move.move(turn_speed, 'no', 'right', 0.2) # 'no'/'right':turn Right, turn_speed：left wheel speed, 0.2:turn_speed*0.2 = right wheel speed
+                else:
+                    move.move(turn_speed, 'no', 'no', 0) # stop
+
+            elif posInput < 180: # turnLeft.
+                if CVRun:
+                    move.move(turn_speed, 'no', 'left', 0.2) # 'no'/'left':turn left.
+                else:
+                    move.move(turn_speed, 'no', 'no', 0) # 'no'/'no'：stop.
+                        
             else:
-                move.move(80, 'no', 'no', 0.5)
-            pass
-        elif posInput < (setCenter - findLineError):
-            # move.motorStop()
-            #turnLeft
-            error = (320-posInput)/3
-            outv = int(round((pid.GenOut(error)),0))
-            CVThread.scGear.moveAngle(0,outv)
-            if CVRun:
-                move.move(80, 'no', 'left', 0.5)
-            else:
-                move.move(80, 'no', 'no', 0.5)
-            pass
-        else:
-            if CVRun:
-                move.move(80, 'forward', 'no', 0.5)
-            else:
-                move.move(80, 'no', 'no', 0.5)
-            #forward
-            pass
-        # else:
-        #     pass
+                if CVRun:
+                    move.move(forward_speed, 'forward', 'no', 0.2)# 'forward'/'no': forward.
+                else: 
+                    move.move(forward_speed, 'no', 'no', 0.2) # stop
+                pass
+        else: # Tracking color not found.
+            move.move(80, 'no', 'no', 0.5) # stop.
 
 
     def findlineCV(self, frame_image):
+        global findLineMove
         frame_findline = cv2.cvtColor(frame_image, cv2.COLOR_BGR2GRAY)
         retval, frame_findline =  cv2.threshold(frame_findline, 0, 255, cv2.THRESH_OTSU)
         frame_findline = cv2.erode(frame_findline, None, iterations=6)
@@ -242,6 +235,22 @@ class CVThread(threading.Thread):
 
             lineIndex_Pos1 = np.where(colorPos_1 == lineColorSet)
             lineIndex_Pos2 = np.where(colorPos_2 == lineColorSet)
+            # print("lineIndex_Pos1: %s" %lineIndex_Pos1[0])
+            # print("lineIndex_Pos2: %s" %lineIndex_Pos2[0])
+
+            # Roughly judge whether there is a color to track.
+            if lineIndex_Pos1 !=[]:
+                if abs(lineIndex_Pos1[0][-1] - lineIndex_Pos1[0][0]) > 500:
+                    print("Tracking color not found")
+                    findLineMove = 0    # No tracking color, stop moving
+                else:
+                    findLineMove = 1
+            elif lineIndex_Pos2!= []:
+                if abs(lineIndex_Pos2[0][-1] - lineIndex_Pos2[0][0]) > 500:
+                    print("Tracking color not found")
+                    findLineMove = 0
+                else:
+                    findLineMove = 1
 
             if lineColorCount_Pos1 == 0:
                 lineColorCount_Pos1 = 1
@@ -251,17 +260,20 @@ class CVThread(threading.Thread):
             self.left_Pos1 = lineIndex_Pos1[0][lineColorCount_Pos1-1]
             self.right_Pos1 = lineIndex_Pos1[0][0]
             self.center_Pos1 = int((self.left_Pos1+self.right_Pos1)/2)
+            # print("center_Pos1: %s" %self.center_Pos1)
 
             self.left_Pos2 = lineIndex_Pos2[0][lineColorCount_Pos2-1]
             self.right_Pos2 = lineIndex_Pos2[0][0]
             self.center_Pos2 = int((self.left_Pos2+self.right_Pos2)/2)
+            # print("center_Pos2: %s" %self.center_Pos2)
 
             self.center = int((self.center_Pos1+self.center_Pos2)/2)
         except:
-            center = None
+            self.center = None
             pass
-
-        self.findLineCtrl(self.center, 320)
+        print("center: %s" %self.center)
+        # self.findLineCtrl(self.center, 320)
+        self.findLineCtrl(self.center)
         self.pause()
 
 
@@ -358,6 +370,7 @@ class Camera(BaseCamera):
     # modeSelect = 'findlineCV'
     # modeSelect = 'findColor'
     # modeSelect = 'watchDog'
+    # modeSelect = 'stop'
 
 
     def __init__(self):
@@ -437,14 +450,18 @@ class Camera(BaseCamera):
             if img is None:
                 if ImgIsNone == 0:
                     print("The camera has not read data, please check whether the camera can be used normally.")
-                    print("Use the command: 'raspistill -t 1000 -o image.jpg'. Close the self-starting program webServer.py")
-                    print("Use the command: 'raspistill -t 1000 -o image.jpg' to check whether the camera can be used correctly.")
                     ImgIsNone = 1
                 continue
 
             if Camera.modeSelect == 'none':
                 switch.switch(1,0)
                 cvt.pause()
+            elif Camera.modeSelect == 'stop':
+                switch.switch(1,0)
+                move.motorStop()
+                cvt.pause()
+                Camera.modeSelect = 'none'
+
             else:
                 if cvt.CVThreading:
                     pass
