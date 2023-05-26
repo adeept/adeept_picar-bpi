@@ -13,7 +13,7 @@ import ultra
 import Kalman_filter
 import move
 
-dist      = 0.4  #the stop distance (m)
+automatic_dist      = 0.2  #the stop distance (m)
 minDist   = 0.3 #Change the distance of the car's behavior (m)
 
 move.setup()
@@ -197,7 +197,7 @@ class Functions(threading.Thread):
         if self.functionMode == 'none':
             move.move(80, 'no', 'no', 0.5)
         '''
-        pwm.set_pwm(2, 0, pwm2_init)
+        pwm.set_pwm(0, 0, pwm2_init)
         time.sleep(0.5)
         a = ultra.checkdist() #Get the ultrasonic detection distance
         b = ultra.checkdist()
@@ -206,75 +206,83 @@ class Functions(threading.Thread):
         print('midDist = %0.2f cm' %(midDist*100))
         move.motorStop()#Stop the car
 
-        if midDist > dist:#No obstacles
+        if midDist > automatic_dist:#No obstacles
             # move.motor(status, forward, b_spd)
             # motor.motor1(status, forward, t_spd)
-            move.move(100, 'forward', 'no', 0.5)
+            move.move(40, 'forward', 'no', 0.5)
 
 
-        elif midDist <= dist:#Obstacles
-            pwm.set_pwm(2, 0, 150) # left distance.
+        elif midDist <= automatic_dist:#Obstacles
+            move.motorStop()#Stop the car
+            pwm.set_pwm(0, 0, 150) # left distance.
+            print("_________left________")
+            time.sleep(0.5)
             
             a = ultra.checkdist()
             b = ultra.checkdist()
             c = ultra.checkdist()
-            leftDist = min(a,b,c)
+            leftDist = (a+b+c)/3
             print('leftDist = %0.2f cm' %(leftDist*100))
             
-            pwm.set_pwm(2, 0, 450) # right distance.
+            pwm.set_pwm(0, 0, 450) # right distance.
+            time.sleep(0.5)
+            
+            print("_________left________")
             a = ultra.checkdist()
             b = ultra.checkdist()
             c = ultra.checkdist()
-            rightDist = min(a,b,c)
+            rightDist = (a+b+c)/3
             print('rightDist = %0.2f cm' %(rightDist*100))
+            
+            pwm.set_pwm(0, 0, pwm2_init) # mid
 
-            if leftDist < dist and rightDist < dist:#Judgment left and right
+            if leftDist < automatic_dist and rightDist < automatic_dist:#Judgment left and right
                 if leftDist >= rightDist: # There are obstacles on the right
                     # backward to the left. The left wheel moves backwards, \
                     # and the right wheel moves backwards at a speed of 0.5
-                    move.move(100, 'backward', 'left', 0.5)
-                    time.sleep(1)
-                    move.move(100, 'backward', 'right', 0.5) # Adjust the car body to the left.
+                    move.move(50, 'backward', 'left', 0.5)
                     time.sleep(0.5)
+                    move.move(50, 'backward', 'right', 0.5) # Adjust the car body to the left.
+                    time.sleep(0.2)
                 else: # There are obstacles on the left.
-                    move.move(100, 'backward', 'right', 0.5) 
-                    time.sleep(1)
-                    move.move(100, 'backward', 'left', 0.5) 
+                    move.move(50, 'backward', 'right', 0.5) 
                     time.sleep(0.5)
+                    move.move(50, 'backward', 'left', 0.5) 
+                    time.sleep(0.2)
             
-            elif leftDist > dist and rightDist <= dist: #There are obstacles on the right
+            elif leftDist > automatic_dist and rightDist <= automatic_dist: #There are obstacles on the right
                 if midDist < minDist: # Obstacle ahead
-                    move.move(100, 'backward', 'no', 0.5) # backward.
-                    time.sleep(1)
-                move.move(100, 'backward', 'left', 0.5) 
-                time.sleep(0.5)
+                    move.move(50, 'backward', 'no', 0.5) # backward.
+                    time.sleep(0.2)
+                move.move(50, 'backward', 'left', 0.5) 
+                time.sleep(0.3)
                 # else:
                 #     move.move(100, 'backward', 'left', 0.5)
                 #     time.sleep(0.5)
 
-            elif leftDist <= dist and rightDist > dist: #There are obstacles on the left.
+            elif leftDist <= automatic_dist and rightDist > automatic_dist: #There are obstacles on the left.
                 if midDist < minDist: # Obstacle ahead
-                    move.move(100, 'backward', 'no', 0.5) 
-                    time.sleep(1)
-                move.move(100, 'backward', 'right', 0.5) 
-                time.sleep(0.5)
+                    move.move(50, 'backward', 'no', 0.5) 
+                    time.sleep(0.5)
+                move.move(50, 'backward', 'right', 0.5) 
+                time.sleep(0.2)
                 # else:
                 #     move.move(100, 'backward', 'right', 0.5) 
                 #     time.sleep(0.5)
 
-            elif leftDist >= dist and rightDist >= dist:
+            elif leftDist >= automatic_dist and rightDist >= automatic_dist:
                 if leftDist > rightDist: # The distance to the right is greater than the left
                     if midDist < minDist:
-                        move.move(100, 'backward', 'no', 0.5) 
-                        time.sleep(1)
-                    move.move(100, 'backward', 'left', 0.5) 
-                    time.sleep(0.5)
+                        move.move(50, 'backward', 'no', 0.5) 
+                        time.sleep(0.5)
+                    move.move(50, 'backward', 'left', 0.5) 
+                    time.sleep(0.2)
                 else:
                     if midDist < minDist:
-                        move.move(100, 'backward', 'no', 0.5) 
-                        time.sleep(1)
-                    move.move(100, 'backward', 'left', 0.5) 
-                    time.sleep(0.5)
+                        move.move(50, 'backward', 'no', 0.5) 
+                        time.sleep(0.5)
+                    move.move(50, 'backward', 'left', 0.5) 
+                    time.sleep(0.2)
         
         if self.functionMode == 'none':
             move.move(80, 'no', 'no', 0.5)            
