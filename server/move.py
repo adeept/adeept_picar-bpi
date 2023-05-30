@@ -114,13 +114,13 @@ def move(speed, direction, turn, radius=0.6):   # 0 < radius <= 1
 			motor_right(1, right_backward, speed)
 	elif direction == 'no':
 		if turn == 'right':
-			motor_left(0, left_backward, speed)
-			# motor_left(1, left_forward, int(speed*radius))
+			# motor_left(0, left_backward, speed)
+			motor_left(1, left_backward, int(speed*radius))
 			motor_right(1, right_forward, speed)
 		elif turn == 'left':
 			motor_left(1, left_forward, speed)
-			motor_right(0, right_backward, speed)
-			# motor_right(1, right_forward, int(speed*radius))
+			# motor_right(0, right_backward, speed)
+			motor_right(1, right_backward, int(speed*radius))
 		else:
 			motorStop()
 	else:
