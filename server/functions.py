@@ -14,7 +14,7 @@ import Kalman_filter
 import move
 
 automatic_dist      = 0.2  #the stop distance (m)
-minDist   = 0.3 #Change the distance of the car's behavior (m)
+minDist   = 0.1 #Change the distance of the car's behavior (m)
 
 move.setup()
 
@@ -198,7 +198,7 @@ class Functions(threading.Thread):
             move.move(80, 'no', 'no', 0.5)
         '''
         pwm.set_pwm(0, 0, pwm2_init)
-        time.sleep(0.5)
+        time.sleep(0.2)
         a = ultra.checkdist() #Get the ultrasonic detection distance
         b = ultra.checkdist()
         c = ultra.checkdist()
@@ -216,7 +216,7 @@ class Functions(threading.Thread):
             move.motorStop()#Stop the car
             pwm.set_pwm(0, 0, 150) # left distance.
             print("_________left________")
-            time.sleep(0.5)
+            time.sleep(0.4)
             
             a = ultra.checkdist()
             b = ultra.checkdist()
@@ -225,7 +225,7 @@ class Functions(threading.Thread):
             print('leftDist = %0.2f cm' %(leftDist*100))
             
             pwm.set_pwm(0, 0, 450) # right distance.
-            time.sleep(0.5)
+            time.sleep(0.4)
             
             print("_________left________")
             a = ultra.checkdist()
@@ -241,14 +241,14 @@ class Functions(threading.Thread):
                     # backward to the left. The left wheel moves backwards, \
                     # and the right wheel moves backwards at a speed of 0.5
                     move.move(50, 'backward', 'left', 0.5)
-                    time.sleep(0.5)
-                    move.move(50, 'backward', 'right', 0.5) # Adjust the car body to the left.
-                    time.sleep(0.2)
+                    time.sleep(0.3)
+                    # move.move(50, 'backward', 'right', 0.5) # Adjust the car body to the left.
+                    # time.sleep(0.2)
                 else: # There are obstacles on the left.
                     move.move(50, 'backward', 'right', 0.5) 
-                    time.sleep(0.5)
-                    move.move(50, 'backward', 'left', 0.5) 
-                    time.sleep(0.2)
+                    time.sleep(0.3)
+                    # move.move(50, 'backward', 'left', 0.5) 
+                    # time.sleep(0.2)
             
             elif leftDist > automatic_dist and rightDist <= automatic_dist: #There are obstacles on the right
                 if midDist < minDist: # Obstacle ahead
@@ -263,7 +263,7 @@ class Functions(threading.Thread):
             elif leftDist <= automatic_dist and rightDist > automatic_dist: #There are obstacles on the left.
                 if midDist < minDist: # Obstacle ahead
                     move.move(50, 'backward', 'no', 0.5) 
-                    time.sleep(0.5)
+                    time.sleep(0.3)
                 move.move(50, 'backward', 'right', 0.5) 
                 time.sleep(0.2)
                 # else:
@@ -274,13 +274,13 @@ class Functions(threading.Thread):
                 if leftDist > rightDist: # The distance to the right is greater than the left
                     if midDist < minDist:
                         move.move(50, 'backward', 'no', 0.5) 
-                        time.sleep(0.5)
+                        time.sleep(0.3)
                     move.move(50, 'backward', 'left', 0.5) 
                     time.sleep(0.2)
                 else:
                     if midDist < minDist:
                         move.move(50, 'backward', 'no', 0.5) 
-                        time.sleep(0.5)
+                        time.sleep(0.3)
                     move.move(50, 'backward', 'left', 0.5) 
                     time.sleep(0.2)
         
