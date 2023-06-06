@@ -124,7 +124,8 @@ class CVThread(threading.Thread):
                 '''
                 Image binarization, the method of processing functions can be searched for "threshold" in the link: http://docs.opencv.org/3.0.0/examples.html
                 '''
-                # retval_bw, imgInput =  cv2.threshold(imgInput, 0, 255, cv2.THRESH_OTSU) # THRESH_OTSU:Adaptive Threshold (Dynamic Threshold).flag, use Otsu algorithm to choose the threshold value.
+                # THRESH_OTSU:Adaptive Threshold (Dynamic Threshold).flag, use Otsu algorithm to choose the threshold value.
+                # retval_bw, imgInput =  cv2.threshold(imgInput, 0, 255, cv2.THRESH_OTSU) 
                 retval_bw, imgInput =  cv2.threshold(imgInput, 80, 255, cv2.THRESH_BINARY) # Set the threshold manually and set it to 80.
                 imgInput = cv2.dilate(imgInput, None, iterations=2) # dilate
                 imgInput = cv2.erode(imgInput, None, iterations=2) #  erode
@@ -198,28 +199,28 @@ class CVThread(threading.Thread):
     def findLineCtrl(self, posInput):
         global findLineMove
         # posInput == center
-        if posInput != None and findLineMove == 1:
+        if posInput != None and findLineMove == 1: # Determine whether the video tracking function can be performed
             if posInput > 480: # The position of the center of the black line in the screen (value range: 0-640)
                 #turnRight
-                if CVRun:
-                    move.move(turn_speed, 'no', 'right', 0.2) # 'no'/'right':turn Right, turn_speed：left wheel speed, 0.2:turn_speed*0.2 = right wheel speed
+                if CVRun: # The default is 1, and it can be manually set to 0 under special circumstances to stop the movement of the car.
+                    move.video_Tracking_Move(turn_speed, 'no', 'right', 0.2) # 'no'/'right':turn Right, turn_speed：left wheel speed, 0.2:turn_speed*0.2 = right wheel speed
                 else:
-                    move.move(turn_speed, 'no', 'no', 0) # stop
+                    move.video_Tracking_Move(turn_speed, 'no', 'no', 0) # 'no'/'no': stop,The 4th parameter "0" is invalid
 
             elif posInput < 180: # turnLeft.
                 if CVRun:
-                    move.move(turn_speed, 'no', 'left', 0.2) # 'no'/'left':turn left.
+                    move.video_Tracking_Move(turn_speed, 'no', 'left', 0.2) # 'no'/'left':turn left.
                 else:
-                    move.move(turn_speed, 'no', 'no', 0) # 'no'/'no'：stop.
+                    move.video_Tracking_Move(turn_speed, 'no', 'no', 0) # 'no'/'no'：stop.
                         
             else:
                 if CVRun:
-                    move.move(forward_speed, 'forward', 'no', 0.2)# 'forward'/'no': forward.
+                    move.video_Tracking_Move(forward_speed, 'forward', 'no', 0.2)# 'forward'/'no': forward.
                 else: 
-                    move.move(forward_speed, 'no', 'no', 0.2) # stop
+                    move.video_Tracking_Move(forward_speed, 'no', 'no', 0.2) # stop
                 pass
         else: # Tracking color not found.
-            move.move(80, 'no', 'no', 0.5) # stop.
+            move.video_Tracking_Move(80, 'no', 'no', 0.5) # stop.
 
 
     def findlineCV(self, frame_image):
