@@ -70,6 +70,9 @@ line_pin_left = 20
 def pwmGenOut(angleInput):
     return int(round(23/9*angleInput))
 
+def mapping(value, in_min, in_max, out_min, out_max):
+	return int((value - in_min)*(out_max - out_min)/(in_max - in_min) + out_min)
+
 
 def setup():
     GPIO.setwarnings(False)
@@ -93,6 +96,7 @@ class Functions(threading.Thread):
         self.scanServo = 1
         self.turnServo = 0
         self.turnWiggle = 200
+
 
         setup()
 
@@ -184,35 +188,23 @@ class Functions(threading.Thread):
         time.sleep(0.1)
 
 
+
+
     def automaticProcessing(self):
-        print('automaticProcessing')
-        '''
-        if self.rangeKeep/3 > ultra.checkdist():
-            move.move(100, 'backward', 'no', 0.5)
-        elif self.rangeKeep > ultra.checkdist():
-            move.move(100, 'no', 'left', 0.5)
-        else:
-            move.move(100, 'forward', 'no', 0.5)
-        time.sleep(0.1)
-        if self.functionMode == 'none':
-            move.move(80, 'no', 'no', 0.5)
-        '''
+        # print('automaticProcessing')
         pwm.set_pwm(0, 0, pwm2_init)
-        time.sleep(0.2)
-        a = ultra.checkdist() #Get the ultrasonic detection distance
-        b = ultra.checkdist()
-        c = ultra.checkdist()
+        time.sleep(0.08)
         midDist = min(a,b,c) #Get the ultrasonic detection distance
-        print('midDist = %0.2f cm' %(midDist*100))
+        # print('midDist = %0.2f cm' %(midDist*100))
         move.motorStop()#Stop the car
 
-        if midDist > automatic_dist:#No obstacles
+        if midDist > automatic_dist:#No obstacles (20cm)
             # move.motor(status, forward, b_spd)
             # motor.motor1(status, forward, t_spd)
             move.move(40, 'forward', 'no', 0.5)
 
 
-        elif midDist <= automatic_dist:#Obstacles
+        elif midDist <= automatic_dist:#Obstacles 
             move.motorStop()#Stop the car
             pwm.set_pwm(0, 0, 150) # left distance.
             print("_________left________")
@@ -227,7 +219,7 @@ class Functions(threading.Thread):
             pwm.set_pwm(0, 0, 450) # right distance.
             time.sleep(0.4)
             
-            print("_________left________")
+            print("_________right________")
             a = ultra.checkdist()
             b = ultra.checkdist()
             c = ultra.checkdist()
@@ -286,7 +278,6 @@ class Functions(threading.Thread):
         
         if self.functionMode == 'none':
             move.move(80, 'no', 'no', 0.5)            
-
 
 
     def steadyProcessing(self):
