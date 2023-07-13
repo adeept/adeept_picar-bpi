@@ -194,6 +194,9 @@ class Functions(threading.Thread):
         # print('automaticProcessing')
         pwm.set_pwm(0, 0, pwm2_init)
         time.sleep(0.08)
+        a = ultra.checkdist()
+        b = ultra.checkdist()
+        c = ultra.checkdist()
         midDist = min(a,b,c) #Get the ultrasonic detection distance
         # print('midDist = %0.2f cm' %(midDist*100))
         move.motorStop()#Stop the car
