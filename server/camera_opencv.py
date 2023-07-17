@@ -25,6 +25,12 @@ frameRender = 1
 findLineError = 20
 findLineMove = 1
 
+left_forward  = 0
+left_backward = 1
+
+right_forward = 0
+right_backward= 1
+
 ImgIsNone = 0
 
 # When turning, only one wheel pushes the car, so a value higher than forward_speed is required.
@@ -33,6 +39,9 @@ forward_speed = 20 # Avoid too fast, the video screen does not respond in time. 
 
 colorUpper = np.array([44, 255, 255])
 colorLower = np.array([24, 100, 100])
+
+def map(input, in_min,in_max,out_min,out_max):
+    return (input-in_min)/(in_max-out_min)*(out_max-out_min)+out_min
 
 class CVThread(threading.Thread):
     font = cv2.FONT_HERSHEY_SIMPLEX
@@ -124,11 +133,10 @@ class CVThread(threading.Thread):
                 '''
                 Image binarization, the method of processing functions can be searched for "threshold" in the link: http://docs.opencv.org/3.0.0/examples.html
                 '''
-                # THRESH_OTSU:Adaptive Threshold (Dynamic Threshold).flag, use Otsu algorithm to choose the threshold value.
-                # retval_bw, imgInput =  cv2.threshold(imgInput, 0, 255, cv2.THRESH_OTSU) 
+                # retval_bw, imgInput =  cv2.threshold(imgInput, 0, 255, cv2.THRESH_OTSU) # THRESH_OTSU:Adaptive Threshold (Dynamic Threshold).flag, use Otsu algorithm to choose the threshold value.
                 retval_bw, imgInput =  cv2.threshold(imgInput, 80, 255, cv2.THRESH_BINARY) # Set the threshold manually and set it to 80.
-                imgInput = cv2.dilate(imgInput, None, iterations=2) # dilate
-                imgInput = cv2.erode(imgInput, None, iterations=2) #  erode
+                # imgInput = cv2.dilate(imgInput, None, iterations=2) # dilate
+                imgInput = cv2.erode(imgInput, None, iterations=6) #  erode
             try:
                 if lineColorSet == 255:
                     cv2.putText(imgInput,('Following White Line'),(30,50), cv2.FONT_HERSHEY_SIMPLEX, 0.5,(128,255,128),1,cv2.LINE_AA)
@@ -199,13 +207,13 @@ class CVThread(threading.Thread):
     def findLineCtrl(self, posInput):
         global findLineMove
         # posInput == center
-        if posInput != None and findLineMove == 1: # Determine whether the video tracking function can be performed
+        if posInput != None and findLineMove == 1:
             if posInput > 480: # The position of the center of the black line in the screen (value range: 0-640)
                 #turnRight
-                if CVRun: # The default is 1, and it can be manually set to 0 under special circumstances to stop the movement of the car.
+                if CVRun:
                     move.video_Tracking_Move(turn_speed, 'no', 'right', 0.2) # 'no'/'right':turn Right, turn_speed：left wheel speed, 0.2:turn_speed*0.2 = right wheel speed
                 else:
-                    move.video_Tracking_Move(turn_speed, 'no', 'no', 0) # 'no'/'no': stop,The 4th parameter "0" is invalid
+                    move.video_Tracking_Move(turn_speed, 'no', 'no', 0) # stop
 
             elif posInput < 180: # turnLeft.
                 if CVRun:
@@ -215,7 +223,17 @@ class CVThread(threading.Thread):
                         
             else:
                 if CVRun:
-                    move.video_Tracking_Move(forward_speed, 'forward', 'no', 0.2)# 'forward'/'no': forward.
+                    # move.video_Tracking_Move(forward_speed, 'forward', 'no', 0.2)# 'forward'/'no': forward.
+                    error = 320-posInput
+                    outv = int(round((pid.GenOut(error)),0))
+                    coef = map(abs(outv),0,160, 1.0,0)
+                    # print(coef)
+                    if outv >0:
+                        move.motor_left(1, left_forward, int(forward_speed*coef))
+                        move.motor_right(1, right_forward, forward_speed)
+                    elif outv <=0:
+                        move.motor_left(1, left_forward, forward_speed)
+                        move.motor_right(1, right_forward, int(forward_speed*coef))
                 else: 
                     move.video_Tracking_Move(forward_speed, 'no', 'no', 0.2) # stop
                 pass
@@ -226,7 +244,8 @@ class CVThread(threading.Thread):
     def findlineCV(self, frame_image):
         global findLineMove
         frame_findline = cv2.cvtColor(frame_image, cv2.COLOR_BGR2GRAY)
-        retval, frame_findline =  cv2.threshold(frame_findline, 0, 255, cv2.THRESH_OTSU)
+        # retval, frame_findline =  cv2.threshold(frame_findline, 0, 255, cv2.THRESH_OTSU)
+        retval, frame_findline =  cv2.threshold(frame_findline, 80, 255, cv2.THRESH_BINARY) # Set the threshold manually and set it to 80.
         frame_findline = cv2.erode(frame_findline, None, iterations=6)
         colorPos_1 = frame_findline[linePos_1]
         colorPos_2 = frame_findline[linePos_2]
@@ -258,15 +277,23 @@ class CVThread(threading.Thread):
             if lineColorCount_Pos2 == 0:
                 lineColorCount_Pos2 = 1
 
-            self.left_Pos1 = lineIndex_Pos1[0][lineColorCount_Pos1-1]
-            self.right_Pos1 = lineIndex_Pos1[0][0]
+
+            # self.left_Pos1 = lineIndex_Pos1[0][lineColorCount_Pos1-3]
+            # self.right_Pos1 = lineIndex_Pos1[0][2]
+            self.left_Pos1 = lineIndex_Pos1[0][1] # Is [1] instead of [0], in order to remove black/white edges that may appear on the far left
+            self.right_Pos1 = lineIndex_Pos1[0][lineColorCount_Pos1-2]   # 
+
             self.center_Pos1 = int((self.left_Pos1+self.right_Pos1)/2)
             # print("center_Pos1: %s" %self.center_Pos1)
+            # print("1L/C/R: %s/%s/%s" %(self.left_Pos1, self.center_Pos1, self.right_Pos1))
 
-            self.left_Pos2 = lineIndex_Pos2[0][lineColorCount_Pos2-1]
-            self.right_Pos2 = lineIndex_Pos2[0][0]
+            self.left_Pos2 =  lineIndex_Pos2[0][1]
+            self.right_Pos2 = lineIndex_Pos2[0][lineColorCount_Pos2-2]
             self.center_Pos2 = int((self.left_Pos2+self.right_Pos2)/2)
             # print("center_Pos2: %s" %self.center_Pos2)
+            # print("center_Pos1: %s" %self.center_Pos1)
+            # print("2L/C/R: %s/%s/%s" %(self.left_Pos2, self.center_Pos2, self.right_Pos2))
+
 
             self.center = int((self.center_Pos1+self.center_Pos2)/2)
         except:
@@ -274,6 +301,7 @@ class CVThread(threading.Thread):
             pass
         print("center: %s" %self.center)
         # self.findLineCtrl(self.center, 320)
+        time.sleep(0.2)
         self.findLineCtrl(self.center)
         self.pause()
 
@@ -349,6 +377,7 @@ class CVThread(threading.Thread):
         while 1:
             self.__flag.wait()
             if self.CVMode == 'none':
+                # Camera.CVRunSet(0)
                 continue
             elif self.CVMode == 'findColor':
                 self.CVThreading = 1
@@ -356,6 +385,7 @@ class CVThread(threading.Thread):
                 self.CVThreading = 0
             elif self.CVMode == 'findlineCV':
                 self.CVThreading = 1
+                # Camera.CVRunSet(1)
                 self.findlineCV(self.imgCV)
                 self.CVThreading = 0
             elif self.CVMode == 'watchDog':
@@ -437,7 +467,7 @@ class Camera(BaseCamera):
 
     @staticmethod
     def frames():
-        global ImgIsNone
+        global ImgIsNone, CVRun
         camera = cv2.VideoCapture(Camera.video_source)
         if not camera.isOpened():
             raise RuntimeError('Could not start camera.')
@@ -461,12 +491,14 @@ class Camera(BaseCamera):
                 switch.switch(1,0)
                 move.motorStop()
                 cvt.pause()
+                CVRun = 0
                 Camera.modeSelect = 'none'
 
             else:
                 if cvt.CVThreading:
                     pass
                 else:
+                    CVRun = 1
                     cvt.mode(Camera.modeSelect, img)
                     cvt.resume()
                 try:
