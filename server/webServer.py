@@ -93,6 +93,17 @@ def replace_num(initial,new_num):   #Call this function to replace data in '.txt
     with open(thisPath+"/RPIservo.py","w") as f:
         f.writelines(newline)
 
+def replace_Threshold(initial,new_Threshold):   #Modify the threshold for binarization in video tracking
+    # global r
+    newline=""
+    str_num=str(new_Threshold)
+    with open(thisPath+"/camera_opencv.py","r") as f:
+        for line in f.readlines():
+            if(line.find(initial) == 0):
+                line = initial+"%s" %(str_num+"\n")
+            newline += line        # The modified file content is saved line by line to "newline".
+    with open(thisPath+"/camera_opencv.py","w") as f:
+        f.writelines(newline)
 
 def FPV_thread():
     global fpv
@@ -395,6 +406,24 @@ async def recv_msg(websocket):
                     speed_set = int(set_B[1])
                 except:
                     pass
+
+            elif 'ThresholdOK' == data:
+                try:
+                    print("value_Thr")
+                    value_Thr = flask_app.camera.ThresholdOK()
+                    print(value_Thr)
+                    replace_Threshold('Threshold = ', value_Thr)
+                except:
+                    pass
+            elif 'Threshold' in data:
+                try:
+                    set_value = data.split()
+                    value_Thr = int(set_value[1])
+                    flask_app.camera.Threshold(value_Thr)
+                except:
+                    pass
+            
+
 
             elif 'AR' == data:
                 modeSelect = 'AR'
