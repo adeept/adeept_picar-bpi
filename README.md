@@ -1,14 +1,14 @@
 Adeept_Picar-A for Banana Pi.
 
-- 舵机程序：运行servo.py程序后，0号引脚上的舵机会来回旋转。
+- Servo program: After running the servo.py program, the servo on pin 0 will rotate back and forth.
 
 ```sudo python3 adeept_picar-bpi/sever/servo.py```
 
 
-- 电机程序：运行move.py程序后，两个电机引脚的电机会转动1s左右。
+- Motor program: After running the move.py program, the motors of the two motor pins will rotate for about 1s.
 
 ```sudo python3 adeept_picar-bpi/sever/move.py```
 
-- 超声波程序： 运行ultra.py程序后，超声波模块会检测到与障碍物之间的距离。
+- Ultrasonic program: After running the ultra.py program, the ultrasonic module will detect the distance to the obstacle.
 
 ```sudo python3 adeept_picar-bpi/sever/ultra.py```
