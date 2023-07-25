@@ -13,8 +13,9 @@ import ultra
 import Kalman_filter
 import move
 
-automatic_dist      = 0.2  #the stop distance (m)
-minDist   = 0.1 #Change the distance of the car's behavior (m)
+automatic_dist = 0.15   #the stop distance (m)
+minDist   = 0.1         # Backward distance of the Car (m)
+automatic_start = 0
 
 move.setup()
 
@@ -188,30 +189,33 @@ class Functions(threading.Thread):
         time.sleep(0.1)
 
 
-
-
     def automaticProcessing(self):
-        # print('automaticProcessing')
-        pwm.set_pwm(0, 0, pwm2_init)
-        time.sleep(0.08)
-        a = ultra.checkdist()
-        b = ultra.checkdist()
-        c = ultra.checkdist()
-        midDist = min(a,b,c) #Get the ultrasonic detection distance
+        global automatic_start
+        if automatic_start == 0:
+            print('automaticProcessing')
+            pwm.set_pwm(0, 0, pwm2_init)
+            automatic_start = 1
+        # a = ultra.checkdist()
+        # b = ultra.checkdist()
+        # c = ultra.checkdist()
+        midDist = ultra.checkdist()
+        # midDist = min(a,b,c) #Get the ultrasonic detection distance
         # print('midDist = %0.2f cm' %(midDist*100))
+        # time.sleep(0.05)
         move.motorStop()#Stop the car
 
         if midDist > automatic_dist:#No obstacles (20cm)
             # move.motor(status, forward, b_spd)
             # motor.motor1(status, forward, t_spd)
-            move.move(40, 'forward', 'no', 0.5)
+            move.move(40, 'forward', 'no', 0.8)
 
+        elif midDist < minDist:#No obstacles (10cm)
+            move.move(40, 'backward', 'no', 0.8)
 
         elif midDist <= automatic_dist:#Obstacles 
             move.motorStop()#Stop the car
-            pwm.set_pwm(0, 0, 150) # left distance.
-            print("_________left________")
-            time.sleep(0.4)
+            pwm.set_pwm(0, 0, 520) # left distance.
+            time.sleep(0.7)
             
             a = ultra.checkdist()
             b = ultra.checkdist()
@@ -219,68 +223,48 @@ class Functions(threading.Thread):
             leftDist = (a+b+c)/3
             print('leftDist = %0.2f cm' %(leftDist*100))
             
-            pwm.set_pwm(0, 0, 450) # right distance.
-            time.sleep(0.4)
-            
-            print("_________right________")
+            pwm.set_pwm(0, 0, 100) # right distance.
+            time.sleep(0.7)
             a = ultra.checkdist()
             b = ultra.checkdist()
             c = ultra.checkdist()
             rightDist = (a+b+c)/3
             print('rightDist = %0.2f cm' %(rightDist*100))
+            print("_________________")
             
             pwm.set_pwm(0, 0, pwm2_init) # mid
-
+            
             if leftDist < automatic_dist and rightDist < automatic_dist:#Judgment left and right
                 if leftDist >= rightDist: # There are obstacles on the right
                     # backward to the left. The left wheel moves backwards, \
                     # and the right wheel moves backwards at a speed of 0.5
                     move.move(50, 'backward', 'left', 0.5)
                     time.sleep(0.3)
-                    # move.move(50, 'backward', 'right', 0.5) # Adjust the car body to the left.
-                    # time.sleep(0.2)
                 else: # There are obstacles on the left.
                     move.move(50, 'backward', 'right', 0.5) 
                     time.sleep(0.3)
-                    # move.move(50, 'backward', 'left', 0.5) 
-                    # time.sleep(0.2)
             
             elif leftDist > automatic_dist and rightDist <= automatic_dist: #There are obstacles on the right
-                if midDist < minDist: # Obstacle ahead
-                    move.move(50, 'backward', 'no', 0.5) # backward.
-                    time.sleep(0.2)
-                move.move(50, 'backward', 'left', 0.5) 
+                move.move(50, 'no', 'left', 1) 
                 time.sleep(0.3)
-                # else:
-                #     move.move(100, 'backward', 'left', 0.5)
-                #     time.sleep(0.5)
 
             elif leftDist <= automatic_dist and rightDist > automatic_dist: #There are obstacles on the left.
-                if midDist < minDist: # Obstacle ahead
-                    move.move(50, 'backward', 'no', 0.5) 
-                    time.sleep(0.3)
-                move.move(50, 'backward', 'right', 0.5) 
-                time.sleep(0.2)
-                # else:
-                #     move.move(100, 'backward', 'right', 0.5) 
-                #     time.sleep(0.5)
+                move.move(50, 'no', 'right', 1) 
+                time.sleep(0.3)
 
             elif leftDist >= automatic_dist and rightDist >= automatic_dist:
                 if leftDist > rightDist: # The distance to the right is greater than the left
-                    if midDist < minDist:
-                        move.move(50, 'backward', 'no', 0.5) 
-                        time.sleep(0.3)
-                    move.move(50, 'backward', 'left', 0.5) 
+                    move.move(50, 'no', 'left', 0.8) 
                     time.sleep(0.2)
                 else:
-                    if midDist < minDist:
-                        move.move(50, 'backward', 'no', 0.5) 
-                        time.sleep(0.3)
-                    move.move(50, 'backward', 'left', 0.5) 
+                    move.move(50, 'no', 'right', 0.8) 
                     time.sleep(0.2)
         
         if self.functionMode == 'none':
             move.move(80, 'no', 'no', 0.5)            
+                 
+
+
 
 
     def steadyProcessing(self):
