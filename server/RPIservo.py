@@ -16,7 +16,7 @@ change this form 1 to -1 to reverse servos
 pwm = Adafruit_PCA9685.PCA9685()
 pwm.set_pwm_freq(50)
 
-init_pwm0 = 300
+init_pwm0 = 280
 init_pwm1 = 300
 init_pwm2 = 300
 init_pwm3 = 300
@@ -123,6 +123,13 @@ class ServoCtrl(threading.Thread):
 			self.lastPos[i] = self.nowPos[i]
 		self.goalUpdate = 0
 
+	def returnServoAngle(self, ID):
+		
+		# self.nowPos[ID] = int(self.initPos[ID] + self.sc_direction[ID]*self.pwmGenOut(angleInput))
+		pwmGenOut_value = int((self.nowPos[ID] - self.initPos[ID] )/self.sc_direction[ID])
+		# self.pwmGenOut(angleInput) = int(round(((self.ctrlRangeMax-self.ctrlRangeMin)/self.angleRange*angleInput),0))
+		angle_value = pwmGenOut_value*self.angleRange/((self.ctrlRangeMax-self.ctrlRangeMin))
+		return angle_value
 
 	def speedUpdate(self, IDinput, speedInput):
 		for i in range(0,len(IDinput)):

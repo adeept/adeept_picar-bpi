@@ -26,6 +26,8 @@ lineColorSet = 255
 frameRender = 1
 findLineError = 20
 findLineMove = 1
+tracking_servo_status = 0
+FLCV_Status = 0
 
 left_forward  = 0
 left_backward = 1
@@ -66,6 +68,8 @@ class CVThread(threading.Thread):
 
     scGear = RPIservo.ServoCtrl()
     scGear.moveInit()
+    Tracking_sc = RPIservo.ServoCtrl()
+    Tracking_sc.start()
     move.setup()
     switch.switchSetup()
 
@@ -93,6 +97,11 @@ class CVThread(threading.Thread):
         self.left_Pos2 = None
         self.right_Pos2 = None
         self.center_Pos2 = None
+
+        self.tracking_servo_left = None
+        self.tracking_servo_left_mark = 0
+        self.tracking_servo_right_mark = 0
+
 
         self.center = None
 
@@ -212,10 +221,23 @@ class CVThread(threading.Thread):
 
 
     def findLineCtrl(self, posInput):
-        global findLineMove
+        global findLineMove,tracking_servo_status,FLCV_Status
         # posInput == center
+        if FLCV_Status == 0:    
+            CVThread.scGear.moveAngle(0, 0) # camera centered. (servo_num, deflection angle)
+            FLCV_Status = 1
         if posInput != None and findLineMove == 1:
+            # if posInput < 400 and posInput > 250:
+            #     FLCV_Status = 1
+            # elif FLCV_Status != 1:
+            #     pass
+            if FLCV_Status == -1:
+                CVThread.Tracking_sc.stopWiggle()
+                self.tracking_servo_left_mark = 0
+                self.tracking_servo_right_mark = 0
+                FLCV_Status = 1
             if posInput > 480: # The position of the center of the black line in the screen (value range: 0-640)
+                tracking_servo_status = 1 #  right. -1/0/1: left/mid/right. In which direction the track may be offset out of the tracking area.
                 #turnRight
                 if CVRun:
                     move.video_Tracking_Move(turn_speed, 'no', 'right', 0.2) # 'no'/'right':turn Right, turn_speed：left wheel speed, 0.2:turn_speed*0.2 = right wheel speed
@@ -223,33 +245,67 @@ class CVThread(threading.Thread):
                     move.video_Tracking_Move(turn_speed, 'no', 'no', 0) # stop
 
             elif posInput < 180: # turnLeft.
+                tracking_servo_status = -1 # left
                 if CVRun:
                     move.video_Tracking_Move(turn_speed, 'no', 'left', 0.2) # 'no'/'left':turn left.
                 else:
                     move.video_Tracking_Move(turn_speed, 'no', 'no', 0) # 'no'/'no'：stop.
                         
             else:
+                tracking_servo_status = 0 # mid
                 if CVRun:
                     # In the range of 180-480, adjust the motor speed difference according to the offset.
                     error = 320-posInput
                     outv = int(round((pid.GenOut(error)),0))
                     coef = map(abs(outv), 0, 160, 1.0, 0)
                     # print(coef)
-                    if outv >0:
+                    if outv >0: 
                         move.motor_left(1, left_forward, int(forward_speed*coef))
                         move.motor_right(1, right_forward, forward_speed)
-                    elif outv <=0:
+                    elif outv <=0: 
                         move.motor_left(1, left_forward, forward_speed)
                         move.motor_right(1, right_forward, int(forward_speed*coef))
                 else: 
                     move.video_Tracking_Move(forward_speed, 'no', 'no', 0.2) # stop
                 pass
+        
         else: # Tracking color not found.
+            # print("?????????")
             move.video_Tracking_Move(80, 'no', 'no', 0.5) # stop.
+            FLCV_Status = -1
+            if tracking_servo_status == -1 : # -1/0/1: left/mid/right. rotation left.
+                angle_Limit = CVThread.Tracking_sc.returnServoAngle(0) # Servo deflection angle.
+                print(angle_Limit)
+                if angle_Limit > 30: # The deflection angle is limited to within 30 degrees.
+                    CVThread.Tracking_sc.stopWiggle() # stop servo rotation
+                    move.motor_left(1, left_forward, forward_speed)  # the car turn left
+                    move.motor_right(1, right_forward, int(forward_speed*0.2))
+                    # print("motor left")
+                    self.tracking_servo_left_mark = 1
+                if self.tracking_servo_left_mark == 0: # servo rotation left.
+                    CVThread.Tracking_sc.singleServo(0, 1, 1) # (servo_num, direction,rotation_speed),direction: 1:left, -1:right
+                    self.tracking_servo_left_mark = 1 # The servos will turn continuously and only need to be run once.
+
+            elif tracking_servo_status == 1 : # rotation right
+                angle_Limit = CVThread.Tracking_sc.returnServoAngle(0)
+                print(angle_Limit)
+                if angle_Limit < -30: # The deflection angle is limited to within 30 degrees.
+                    CVThread.Tracking_sc.stopWiggle() # stop servo rotation
+                    move.motor_left(1, left_forward, int(forward_speed*0.2)) # the car turn right
+                    move.motor_right(1, right_forward, forward_speed)
+                    # print("motor right")
+                    self.tracking_servo_right_mark = 1
+
+                if self.tracking_servo_right_mark == 0:
+                    CVThread.Tracking_sc.singleServo(0, -1, 1) # (servo_num, direction,rotation_speed),direction: 1:left, -1:right
+                    self.tracking_servo_right_mark = 1 # The servos will turn continuously and only need to be run once.
+
+            else:  # no track ahead.
+                pass
 
 
     def findlineCV(self, frame_image):
-        global findLineMove
+        global findLineMove,tracking_servo_status
         frame_findline = cv2.cvtColor(frame_image, cv2.COLOR_BGR2GRAY)
         # retval, frame_findline =  cv2.threshold(frame_findline, 0, 255, cv2.THRESH_OTSU)
         retval, frame_findline =  cv2.threshold(frame_findline, Threshold, 255, cv2.THRESH_BINARY) # Set the threshold manually and set it to 80.
