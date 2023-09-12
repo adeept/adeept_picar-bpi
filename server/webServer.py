@@ -21,6 +21,9 @@ import websockets
 import json
 import app
 
+name_ID = "PiCar-A_robot" # WiFi name.
+password = "12345678"     # WiFi password.
+
 # OLED_connection = 1
 # try:
 #     import OLED
@@ -112,7 +115,11 @@ def FPV_thread():
 
 
 def ap_thread():
-    os.system("sudo create_ap --no-virt wlan0 eth0 Adeept_robot 12345678")
+    global name_ID, password
+    # switch.switch(2,1) # green LED off
+    switch.switch(3,0) # blue LED on
+    # os.system("sudo create_ap --no-virt wlan0 eth0 Adeept_robot 12345678")
+    os.system("sudo create_ap --no-virt wlan0 eth0 "+ name_ID+" "+password)
 
 
 def functionSelect(command_input, response):
@@ -135,9 +142,9 @@ def functionSelect(command_input, response):
 
     elif 'stopCV' == command_input:
         flask_app.modeselect('stop')
-        switch.switch(1,0)
-        switch.switch(2,0)
-        switch.switch(3,0)
+        # switch.switch(1,0)
+        # switch.switch(2,0)
+        # switch.switch(3,0)
 
     elif 'police' == command_input:
         pass
@@ -165,23 +172,24 @@ def functionSelect(command_input, response):
 
 
 def switchCtrl(command_input, response):
-    if 'Switch_1_on' in command_input:
-        switch.switch(1,1)
+    # if 'Switch_1_on' in command_input:
+    #     switch.switch(1,1)
 
-    elif 'Switch_1_off' in command_input:
-        switch.switch(1,0)
+    # elif 'Switch_1_off' in command_input:
+    #     switch.switch(1,0)
 
-    elif 'Switch_2_on' in command_input:
-        switch.switch(2,1)
+    # elif 'Switch_2_on' in command_input:
+    #     switch.switch(2,1)
 
-    elif 'Switch_2_off' in command_input:
-        switch.switch(2,0)
+    # elif 'Switch_2_off' in command_input:
+    #     switch.switch(2,0)
 
-    elif 'Switch_3_on' in command_input:
-        switch.switch(3,1)
+    # elif 'Switch_3_on' in command_input:
+    #     switch.switch(3,1)
 
-    elif 'Switch_3_off' in command_input:
-        switch.switch(3,0) 
+    # elif 'Switch_3_off' in command_input:
+    #     switch.switch(3,0) 
+    pass
 
 
 def robotCtrl(command_input, response):
@@ -324,10 +332,12 @@ def wifi_check():
         # if OLED_connection:
         #     screen.screen_show(2, 'IP:'+ipaddr_check)
         #     screen.screen_show(3, 'AP MODE OFF')
-    except:
+    except:   
+        switch.switch(2,1) # green LED off
+        switch.switch(3,1) # blue LED off
         ap_threading=threading.Thread(target=ap_thread)   #Define a thread for data receiving
         ap_threading.setDaemon(True)                          #'True' means it is a front thread,it would close when the mainloop() closes
-        ap_threading.start()                                  #Thread starts
+        ap_threading.start()  
         # if OLED_connection:
         #     screen.screen_show(2, 'AP Starting 10%')
         # RL.setColor(0,16,50)
@@ -392,7 +402,7 @@ async def recv_msg(websocket):
         if isinstance(data,str):
             robotCtrl(data, response)
 
-            switchCtrl(data, response)
+            # switchCtrl(data, response)
 
             functionSelect(data, response)
 
@@ -487,7 +497,9 @@ async def main_logic(websocket, path):
 
 if __name__ == '__main__':
     switch.switchSetup()
-    switch.set_all_switch_off()
+    # switch.set_all_switch_off()
+    switch.switch(2,0)
+    switch.switch(3,1)
 
     HOST = ''
     PORT = 10223                              #Define port serial 
